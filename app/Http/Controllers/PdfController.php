@@ -28,27 +28,27 @@ class PdfController extends Controller
      * Store a newly created resource in storage.
      */
 
-     public function store(Request $request)
-     {
-         $request->validate([
-             'file_name'=>'required|max:10000|mimes:pdf'
-         ]);
+    public function store(Request $request)
+    {
+        $request->validate([
+            'file_name' => 'required|max:10000|mimes:pdf'
+        ]);
 
-         $path = $request->file('file_name')->store('pdf_files', 'public');
+        $path = $request->file('file_name')->store('pdf_files', 'public');
 
-         // Parse the PDF file
-         $parser = new Parser();
-         $pdf = $parser->parseFile(storage_path('app/public/' . $path));
-         $text = $pdf->getText();
+        // Parse the PDF file
+        $parser = new Parser();
+        $pdf = $parser->parseFile(storage_path('app/public/' . $path));
+        $text = $pdf->getText();
 
-         // Save the file path and extracted text to the database
-         $pdf = Pdf::create([
-             'file_name' => $path,
-             'extracted_text' => $text,
-         ]);
+        // Save the file path and extracted text to the database
+        $pdf = Pdf::create([
+            'file_name' => $path,
+            'extracted_text' => $text,
+        ]);
 
-         return redirect()->route('pdf.show', $pdf->id)->with('status', 'File Is Uploaded Successfully!');
-     }
+        return redirect()->route('pdf.show', $pdf->id)->with('status', 'File Is Uploaded Successfully!');
+    }
 
     // public function store(Request $request)
     // {
@@ -65,11 +65,18 @@ class PdfController extends Controller
     /**
      * Display the specified resource.
      */
+
     public function show($id)
     {
         $pdf = Pdf::findOrFail($id);
-        return view('page.showpdf', ['pdf' => $pdf]);
+        $cleanedText = preg_replace("/\n+/", "\n", $pdf->extracted_text);
+        return view('page.showpdf', ['pdf' => $pdf, 'cleanedText' => $cleanedText]);
     }
+    // public function show($id)
+    // {
+    //     $pdf = Pdf::findOrFail($id);
+    //     return view('page.showpdf', ['pdf' => $pdf]);
+    // }
 
     /**
      * Show the form for editing the specified resource.
